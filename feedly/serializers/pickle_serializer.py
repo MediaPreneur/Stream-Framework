@@ -5,8 +5,7 @@ from feedly.serializers.base import BaseSerializer, BaseAggregatedSerializer
 class PickleSerializer(BaseSerializer):
 
     def loads(self, serialized_activity):
-        activity = pickle.loads(serialized_activity)
-        return activity
+        return pickle.loads(serialized_activity)
 
     def dumps(self, activity):
         self.check_type(activity)

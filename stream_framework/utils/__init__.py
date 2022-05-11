@@ -27,8 +27,7 @@ def datetime_to_epoch(dt):
     Convert datetime object to epoch with millisecond accuracy
     '''
     delta = dt - epoch
-    since_epoch = delta.total_seconds()
-    return since_epoch
+    return delta.total_seconds()
 
 
 def epoch_to_datetime(time_):
@@ -97,10 +96,9 @@ class memoized(object):
             return self.func(*args)
         if args in self.cache:
             return self.cache[args]
-        else:
-            value = self.func(*args)
-            self.cache[args] = value
-            return value
+        value = self.func(*args)
+        self.cache[args] = value
+        return value
 
     def __repr__(self):
         '''Return the function's docstring.'''
@@ -140,5 +138,4 @@ def get_class_from_string(path, default=None):
         if default:
             return default
         else:
-            raise ImportError(
-                'Cannot import name {} (from {})'.format(attr, mod))
+            raise ImportError(f'Cannot import name {attr} (from {mod})')

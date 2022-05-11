@@ -71,7 +71,7 @@ class BaseRedisSortedSetTest(BaseRedisStructureTestCase):
         # try a max
         results = cache.get_results(0, 2, max_score=self.test_scores[1])
         if self.asc_sorted:
-            self.assertEqual(results, self.test_results[0:2])
+            self.assertEqual(results, self.test_results[:2])
         else:
             self.assertEqual(results, self.test_results[1:])
 
@@ -80,7 +80,7 @@ class BaseRedisSortedSetTest(BaseRedisStructureTestCase):
         if self.asc_sorted:
             self.assertEqual(results, self.test_results[1:])
         else:
-            self.assertEqual(results, self.test_results[0:2])
+            self.assertEqual(results, self.test_results[:2])
 
         # try a max with a start
         results = cache.get_results(1, 2, max_score=self.test_scores[1])
@@ -121,7 +121,7 @@ class BaseRedisSortedSetTest(BaseRedisStructureTestCase):
         count = cache.count()
         self.assertEqual(count, 2)
         results = cache[:]
-        self.assertEqual(results, self.test_results[0:2])
+        self.assertEqual(results, self.test_results[:2])
 
     @implementation
     def test_simple_trim(self):
@@ -134,7 +134,7 @@ class BaseRedisSortedSetTest(BaseRedisStructureTestCase):
         count = int(cache.count())
         self.assertEqual(count, 1)
         results = cache[:]
-        self.assertEqual(results, self.test_results[0:1])
+        self.assertEqual(results, self.test_results[:1])
 
     @implementation
     def test_remove(self):
@@ -156,7 +156,7 @@ class BaseRedisSortedSetTest(BaseRedisStructureTestCase):
         count = cache.count()
         self.assertEqual(count, 1)
         results = cache[:]
-        self.assertEqual(results, self.test_results[0:1])
+        self.assertEqual(results, self.test_results[:1])
 
     def test_zremrangebyrank(self):
         redis = get_redis_connection()

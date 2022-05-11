@@ -110,13 +110,9 @@ class NotificationFeed(AggregatedFeed):
         :param aggregated_activities: allows you to specify the aggregated
             activities for improved performance
         '''
-        count = 0
         if aggregated_activities is None:
             aggregated_activities = self[:self.max_length]
-        for aggregated in aggregated_activities:
-            if not aggregated.is_seen():
-                count += 1
-        return count
+        return sum(not aggregated.is_seen() for aggregated in aggregated_activities)
 
     def mark_all(self, seen=True, read=None):
         '''

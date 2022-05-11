@@ -20,8 +20,7 @@ class RedisHashCache(BaseRedisHashCache):
         '''
         key = self.get_key()
         redis_result = self.redis.hlen(key)
-        redis_count = int(redis_result)
-        return redis_count
+        return int(redis_result)
 
     def contains(self, field):
         '''
@@ -29,19 +28,16 @@ class RedisHashCache(BaseRedisHashCache):
         '''
         key = self.get_key()
         result = self.redis.hexists(key, field)
-        activity_found = bool(result)
-        return activity_found
+        return bool(result)
 
     def get(self, field):
         fields = [field]
         results = self.get_many(fields)
-        result = results[field]
-        return result
+        return results[field]
 
     def keys(self):
         key = self.get_key()
-        keys = self.redis.hkeys(key)
-        return keys
+        return self.redis.hkeys(key)
 
     def delete_many(self, fields):
         results = {}
@@ -72,8 +68,7 @@ class RedisHashCache(BaseRedisHashCache):
     def set(self, key, value):
         key_value_pairs = [(key, value)]
         results = self.set_many(key_value_pairs)
-        result = results[0]
-        return result
+        return results[0]
 
     def set_many(self, key_value_pairs):
         results = []
@@ -145,11 +140,7 @@ class ShardedHashCache(RedisHashCache):
         '''
         Returns all possible keys
         '''
-        keys = []
-        for x in range(self.number_of_keys):
-            key = self.key + ':%s' % x
-            keys.append(key)
-        return keys
+        return [self.key + f':{x}' for x in range(self.number_of_keys)]
 
     def get_key(self, field):
         '''
@@ -161,7 +152,7 @@ class ShardedHashCache(RedisHashCache):
         field = str(field)
         number = int(hashlib.md5(field).hexdigest(), 16)
         position = number % self.number_of_keys
-        return self.key + ':%s' % position
+        return self.key + f':{position}'
 
     def get_many(self, fields):
         results = {}

@@ -46,10 +46,8 @@ class RedisCache(object):
         Otherwise spawn a new distributed connection using .map
         '''
         pipe_needed = not isinstance(self.redis, BasePipeline)
-        if pipe_needed:
-            pipe = self.redis.pipeline(transaction=False)
-            operation(pipe, *args, **kwargs)
-            results = pipe.execute()
-        else:
-            results = operation(self.redis, *args, **kwargs)
-        return results
+        if not pipe_needed:
+            return operation(self.redis, *args, **kwargs)
+        pipe = self.redis.pipeline(transaction=False)
+        operation(pipe, *args, **kwargs)
+        return pipe.execute()

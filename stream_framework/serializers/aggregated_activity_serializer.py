@@ -38,11 +38,7 @@ class AggregatedActivitySerializer(BaseAggregatedSerializer):
         # store the dates
         for date_field in self.date_fields:
             value = getattr(aggregated, date_field)
-            if value is not None:
-                # keep the milliseconds
-                epoch = '%.6f' % datetime_to_epoch(value)
-            else:
-                epoch = -1
+            epoch = '%.6f' % datetime_to_epoch(value) if value is not None else -1
             parts += [epoch]
 
         # add the activities serialization
@@ -65,7 +61,7 @@ class AggregatedActivitySerializer(BaseAggregatedSerializer):
 
         # stick everything together
         serialized_aggregated = ';;'.join(map(str, parts))
-        serialized = '%s%s' % (self.identifier, serialized_aggregated)
+        serialized = f'{self.identifier}{serialized_aggregated}'
         return serialized
 
     def loads(self, serialized_aggregated):

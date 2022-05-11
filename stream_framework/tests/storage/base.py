@@ -267,7 +267,7 @@ class TestBaseTimelineStorageClass(unittest.TestCase):
         self.storage.add_many(self.test_key, activities)
         assert self.storage.count(self.test_key) == 42
         s1 = self.storage.get_slice(self.test_key, 0, 21)
-        self.assert_results(s1, activities[0:21])
+        self.assert_results(s1, activities[:21])
         s2 = self.storage.get_slice(self.test_key, 22, 42)
         self.assert_results(s2, activities[22:42])
         s3 = self.storage.get_slice(self.test_key, 22, 23)

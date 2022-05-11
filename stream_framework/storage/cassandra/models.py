@@ -13,8 +13,7 @@ class VarInt(columns.Column):
         try:
             return long(val)
         except (TypeError, ValueError):
-            raise ValidationError(
-                "{} can't be converted to integer value".format(value))
+            raise ValidationError(f"{value} can't be converted to integer value")
 
     def to_python(self, value):
         return self.validate(value)

@@ -34,7 +34,7 @@ class Batch(BatchQuery):
 def factor_model(base_model, column_family_name):
     camel_case = ''.join([s.capitalize()
                          for s in column_family_name.split('_')])
-    class_name = '%sFeedModel' % camel_case
+    class_name = f'{camel_case}FeedModel'
     return type(class_name, (base_model,), {'__table_name__': column_family_name})
 
 
@@ -130,9 +130,9 @@ class CassandraTimelineStorage(BaseTimelineStorage):
         if getattr(self, 'aggregated_activity_class', None) is not None:
             kwargs[
                 'aggregated_activity_class'] = self.aggregated_activity_class
-        serializer_instance = serializer_class(
-            self.model, activity_class=self.activity_class, **kwargs)
-        return serializer_instance
+        return serializer_class(
+            self.model, activity_class=self.activity_class, **kwargs
+        )
 
     def get_batch_interface(self):
         return Batch(batch_size=self.insert_batch_size, atomic_inserts=False)
@@ -146,11 +146,7 @@ class CassandraTimelineStorage(BaseTimelineStorage):
         return len(self.model.objects.filter(feed_id=key, activity_id__gt=activity_id).values_list('feed_id'))
 
     def get_ordering_or_default(self, ordering_args):
-        if ordering_args is None:
-            ordering = ('-activity_id', )
-        else:
-            ordering = ordering_args
-        return ordering
+        return ('-activity_id', ) if ordering_args is None else ordering_args
 
     def get_nth_item(self, key, index, ordering_args=None):
         ordering = self.get_ordering_or_default(ordering_args)
@@ -160,9 +156,6 @@ class CassandraTimelineStorage(BaseTimelineStorage):
         '''
         :returns list: Returns a list with tuples of key,value pairs
         '''
-        results = []
-        limit = 10 ** 6
-
         ordering = self.get_ordering_or_default(ordering_args)
 
         query = self.model.objects.filter(feed_id=key)
@@ -177,9 +170,8 @@ class CassandraTimelineStorage(BaseTimelineStorage):
         except IndexError:
             return []
 
-        if stop is not None:
-            limit = (stop - (start or 0))
-
-        for activity in query.order_by(*ordering).limit(limit):
-            results.append([activity.activity_id, activity])
-        return results
+        limit = (stop - (start or 0)) if stop is not None else 10 ** 6
+        return [
+            [activity.activity_id, activity]
+            for activity in query.order_by(*ordering).limit(limit)
+        ]

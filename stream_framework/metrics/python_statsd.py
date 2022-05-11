@@ -23,24 +23,21 @@ class StatsdMetrics(Metrics):
         self.prefix = prefix
 
     def fanout_timer(self, feed_class):
-        return Timer('%s.%s.fanout_latency' % (self.prefix, feed_class.__name__))
+        return Timer(f'{self.prefix}.{feed_class.__name__}.fanout_latency')
 
     def feed_reads_timer(self, feed_class):
-        return Timer('%s.%s.read_latency' % (self.prefix, feed_class.__name__))
+        return Timer(f'{self.prefix}.{feed_class.__name__}.read_latency')
 
     def on_feed_read(self, feed_class, activities_count):
-        counter = statsd.Counter(
-            '%s.%s.reads' % (self.prefix, feed_class.__name__))
+        counter = statsd.Counter(f'{self.prefix}.{feed_class.__name__}.reads')
         counter += activities_count
 
     def on_feed_write(self, feed_class, activities_count):
-        counter = statsd.Counter(
-            '%s.%s.writes' % (self.prefix, feed_class.__name__))
+        counter = statsd.Counter(f'{self.prefix}.{feed_class.__name__}.writes')
         counter += activities_count
 
     def on_feed_remove(self, feed_class, activities_count):
-        counter = statsd.Counter(
-            '%s.%s.deletes' % (self.prefix, feed_class.__name__))
+        counter = statsd.Counter(f'{self.prefix}.{feed_class.__name__}.deletes')
         counter += activities_count
 
     def on_fanout(self, feed_class, operation, activities_count=1):
@@ -49,9 +46,9 @@ class StatsdMetrics(Metrics):
         counter += activities_count
 
     def on_activity_published(self):
-        counter = statsd.Counter('%s.activities.published' % self.prefix)
+        counter = statsd.Counter(f'{self.prefix}.activities.published')
         counter += 1
 
     def on_activity_removed(self):
-        counter = statsd.Counter('%s.activities.removed' % self.prefix)
+        counter = statsd.Counter(f'{self.prefix}.activities.removed')
         counter += 1

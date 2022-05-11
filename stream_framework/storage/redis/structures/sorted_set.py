@@ -19,31 +19,25 @@ class RedisSortedSetCache(BaseRedisListCache, BaseRedisHashCache):
         # distributed connections
         redis_count = lambda: int(redis_result)
         lazy_factory = lazy(redis_count, int, long)
-        lazy_object = lazy_factory()
-        return lazy_object
+        return lazy_factory()
 
     def index_of(self, value):
         '''
         Returns the index of the given value
         '''
-        if self.sort_asc:
-            redis_rank_fn = self.redis.zrank
-        else:
-            redis_rank_fn = self.redis.zrevrank
+        redis_rank_fn = self.redis.zrank if self.sort_asc else self.redis.zrevrank
         key = self.get_key()
         result = redis_rank_fn(key, value)
         if result:
             result = int(result)
         elif result is None:
-            raise ValueError(
-                'Couldnt find item with value %s in key %s' % (value, key))
+            raise ValueError(f'Couldnt find item with value {value} in key {key}')
         return result
 
     def add(self, score, key):
         score_value_pairs = [(score, key)]
         results = self.add_many(score_value_pairs)
-        result = results[0]
-        return result
+        return results[0]
 
     def add_many(self, score_value_pairs):
         '''
@@ -114,8 +108,7 @@ class RedisSortedSetCache(BaseRedisListCache, BaseRedisHashCache):
         '''
         key = self.get_key()
         result = self.redis.zscore(key, value)
-        activity_found = result is not None
-        return activity_found
+        return result is not None
 
     def trim(self, max_length=None):
         '''
@@ -135,8 +128,7 @@ class RedisSortedSetCache(BaseRedisListCache, BaseRedisHashCache):
             end = (max_length * -1) - 1
 
         removed = self.redis.zremrangebyrank(key, begin, end)
-        logger.info('cleaning up the sorted set %s to a max of %s items' %
-                    (key, max_length))
+        logger.info(f'cleaning up the sorted set {key} to a max of {max_length} items')
         return removed
 
     def get_results(self, start=None, stop=None, min_score=None, max_score=None):
@@ -156,27 +148,31 @@ class RedisSortedSetCache(BaseRedisListCache, BaseRedisHashCache):
         if start is None:
             start = 0
 
-        if stop != -1:
-            limit = stop - start
-        else:
-            limit = -1
-
+        limit = stop - start if stop != -1 else -1
         key = self.get_key()
 
         # some type validations
         if min_score and not isinstance(min_score, (float, int, long, str)):
             raise ValueError(
-                'min_score is not of type float, int, long or str got %s' % min_score)
+                f'min_score is not of type float, int, long or str got {min_score}'
+            )
+
         if max_score and not isinstance(max_score, (float, int, long, str)):
             raise ValueError(
-                'max_score is not of type float, int, long or str got %s' % max_score)
+                f'max_score is not of type float, int, long or str got {max_score}'
+            )
+
 
         if min_score is None:
             min_score = '-inf'
         if max_score is None:
             max_score = '+inf'
 
-        # handle the starting score support
-        results = redis_range_fn(
-            key, start=start, num=limit, withscores=True, min=min_score, max=max_score)
-        return results
+        return redis_range_fn(
+            key,
+            start=start,
+            num=limit,
+            withscores=True,
+            min=min_score,
+            max=max_score,
+        )

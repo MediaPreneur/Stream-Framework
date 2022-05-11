@@ -122,8 +122,8 @@ class AggregatedFeed(BaseFeed):
         # setup our variables
         new, deleted, changed = [], [], []
         getid = lambda a: getattr(a, 'serialization_id', a)
-        activities_to_remove = set(getid(a) for a in activities)
-        activity_dict = dict((getid(a), a) for a in activities)
+        activities_to_remove = {getid(a) for a in activities}
+        activity_dict = {getid(a): a for a in activities}
 
         # first built the activity lookup dict
         activity_remove_dict = defaultdict(list)
@@ -140,7 +140,7 @@ class AggregatedFeed(BaseFeed):
         hydrated_aggregated = activity_remove_dict.keys()
         if self.needs_hydration(hydrated_aggregated):
             hydrated_aggregated = self.hydrate_activities(hydrated_aggregated)
-        hydrate_dict = dict((a.group, a) for a in hydrated_aggregated)
+        hydrate_dict = {a.group: a for a in hydrated_aggregated}
 
         for aggregated, activity_ids_to_remove in activity_remove_dict.items():
             aggregated = hydrate_dict.get(aggregated.group)
@@ -153,9 +153,7 @@ class AggregatedFeed(BaseFeed):
                 aggregated.remove_many(activities_to_remove)
                 changed.append((original, aggregated))
 
-        # new ones we insert, changed we do a delete and insert
-        new_aggregated = self._update_from_diff(new, changed, deleted)
-        return new_aggregated
+        return self._update_from_diff(new, changed, deleted)
 
     def add_many_aggregated(self, aggregated, *args, **kwargs):
         '''
@@ -186,28 +184,27 @@ class AggregatedFeed(BaseFeed):
         '''
         # get all the current aggregated activities
         aggregated = self[:self.max_length]
-        activities = sum([list(a.activities) for a in aggregated], [])
+        activities = sum((list(a.activities) for a in aggregated), [])
         # make sure we don't modify things in place
         activities = copy.deepcopy(activities)
         activity = copy.deepcopy(activity)
 
-        activity_dict = dict()
+        activity_dict = {}
         for a in activities:
             key = (a.verb.id, a.actor_id, a.object_id, a.target_id)
             activity_dict[key] = a
 
         a = activity
         activity_key = (a.verb.id, a.actor_id, a.object_id, a.target_id)
-        present = activity_key in activity_dict
-        return present
+        return activity_key in activity_dict
 
     def get_aggregator(self):
         '''
         Returns the class used for aggregation
         '''
-        aggregator = self.aggregator_class(
-            self.aggregated_activity_class, self.activity_class)
-        return aggregator
+        return self.aggregator_class(
+            self.aggregated_activity_class, self.activity_class
+        )
 
     def _update_from_diff(self, new, changed, deleted):
         '''

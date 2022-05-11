@@ -109,8 +109,7 @@ class Activity(BaseActivity):
         milliseconds = str(int(datetime_to_epoch(self.time) * 1000))
         serialization_id_str = '%s%0.10d%0.3d' % (
             milliseconds, self.object_id, self.verb.id)
-        serialization_id = int(serialization_id_str)
-        return serialization_id
+        return int(serialization_id_str)
 
     def _set_object_or_id(self, field, object_):
         '''
@@ -120,7 +119,7 @@ class Activity(BaseActivity):
         field_id = int
         field = object
         '''
-        id_field = '%s_id' % field
+        id_field = f'{field}_id'
         if isinstance(object_, (int, long)):
             setattr(self, id_field, object_)
         elif object_ is None:
@@ -134,18 +133,14 @@ class Activity(BaseActivity):
         '''
         Fail early if using the activity class in the wrong way
         '''
-        if name in ['object', 'target', 'actor']:
-            if name not in self.__dict__:
-                error_message = 'Field self.%s is not defined, use self.%s_id instead' % (
-                    name, name)
-                raise AttributeError(error_message)
+        if name in ['object', 'target', 'actor'] and name not in self.__dict__:
+            error_message = f'Field self.{name} is not defined, use self.{name}_id instead'
+            raise AttributeError(error_message)
         return object.__getattribute__(self, name)
 
     def __repr__(self):
         class_name = self.__class__.__name__
-        message = '%s(%s) %s %s' % (class_name,
-                                    self.verb.past_tense, self.actor_id, self.object_id)
-        return message
+        return f'{class_name}({self.verb.past_tense}) {self.actor_id} {self.object_id}'
 
 
 class AggregatedActivity(BaseActivity):
@@ -188,8 +183,7 @@ class AggregatedActivity(BaseActivity):
 
         :returns: int --the serialization id
         '''
-        milliseconds = str(int(datetime_to_epoch(self.updated_at)))
-        return milliseconds
+        return str(int(datetime_to_epoch(self.updated_at)))
 
     def get_dehydrated(self):
         '''
@@ -198,9 +192,10 @@ class AggregatedActivity(BaseActivity):
         '''
         if self.dehydrated is True:
             raise ValueError('already dehydrated')
-        self._activity_ids = []
-        for activity in self.activities:
-            self._activity_ids.append(activity.serialization_id)
+        self._activity_ids = [
+            activity.serialization_id for activity in self.activities
+        ]
+
         self.activities = []
         self.dehydrated = True
         return self
@@ -221,22 +216,14 @@ class AggregatedActivity(BaseActivity):
         '''
         Works on both hydrated and not hydrated activities
         '''
-        if self._activity_ids:
-            length = len(self.activity_ids)
-        else:
-            length = len(self.activities)
-        return length
+        return len(self.activity_ids) if self._activity_ids else len(self.activities)
 
     @property
     def activity_ids(self):
         '''
         Returns a list of activity ids
         '''
-        if self._activity_ids:
-            activity_ids = self._activity_ids
-        else:
-            activity_ids = [a.serialization_id for a in self.activities]
-        return activity_ids
+        return self._activity_ids or [a.serialization_id for a in self.activities]
 
     def __cmp__(self, other):
         if not isinstance(other, AggregatedActivity):
@@ -252,17 +239,14 @@ class AggregatedActivity(BaseActivity):
                 if delta > datetime.timedelta(seconds=10):
                     equal = False
                     break
-            else:
-                if current != other_value:
-                    equal = False
-                    break
+            elif current != other_value:
+                equal = False
+                break
 
         if self.activities != other.activities:
             equal = False
 
-        return_value = 0 if equal else -1
-
-        return return_value
+        return 0 if equal else -1
 
     def contains(self, activity):
         '''
@@ -271,7 +255,7 @@ class AggregatedActivity(BaseActivity):
         if not isinstance(activity, (Activity, long, uuid.UUID)):
             raise ValueError('contains needs an activity or long not %s', activity)
         activity_id = getattr(activity, 'serialization_id', activity)
-        return activity_id in set([a.serialization_id for a in self.activities])
+        return activity_id in {a.serialization_id for a in self.activities}
 
     def append(self, activity):
         if self.contains(activity):
@@ -351,13 +335,11 @@ class AggregatedActivity(BaseActivity):
 
     @property
     def last_activity(self):
-        activity = self.activities[-1]
-        return activity
+        return self.activities[-1]
 
     @property
     def last_activities(self):
-        activities = self.activities[::-1]
-        return activities
+        return self.activities[::-1]
 
     @property
     def verb(self):
@@ -379,24 +361,22 @@ class AggregatedActivity(BaseActivity):
         '''
         Returns if the activity should be considered as seen at this moment
         '''
-        seen = self.seen_at is not None and self.seen_at >= self.updated_at
-        return seen
+        return self.seen_at is not None and self.seen_at >= self.updated_at
 
     def is_read(self):
         '''
         Returns if the activity should be considered as seen at this moment
         '''
-        read = self.read_at is not None and self.read_at >= self.updated_at
-        return read
+        return self.read_at is not None and self.read_at >= self.updated_at
 
     def __repr__(self):
         if self.dehydrated:
-            message = 'Dehydrated AggregatedActivity (%s)' % self._activity_ids
+            message = f'Dehydrated AggregatedActivity ({self._activity_ids})'
             return message
         verbs = [v.past_tense for v in self.verbs]
         actor_ids = self.actor_ids
         object_ids = self.object_ids
         actors = ','.join(map(str, actor_ids))
-        message = 'AggregatedActivity(%s-%s) Actors %s: Objects %s' % (
-            self.group, ','.join(verbs), actors, object_ids)
+        message = f"AggregatedActivity({self.group}-{','.join(verbs)}) Actors {actors}: Objects {object_ids}"
+
         return message

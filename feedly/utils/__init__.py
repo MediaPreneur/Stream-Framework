@@ -89,10 +89,9 @@ class memoized(object):
             return self.func(*args)
         if args in self.cache:
             return self.cache[args]
-        else:
-            value = self.func(*args)
-            self.cache[args] = value
-            return value
+        value = self.func(*args)
+        self.cache[args] = value
+        return value
 
     def __repr__(self):
         '''Return the function's docstring.'''
@@ -132,5 +131,4 @@ def get_class_from_string(path, default=None):
         if default:
             return default
         else:
-            raise ImportError(
-                'Cannot import name {} (from {})'.format(attr, mod))
+            raise ImportError(f'Cannot import name {attr} (from {mod})')

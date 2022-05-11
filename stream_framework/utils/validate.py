@@ -8,7 +8,7 @@ def validate_type_strict(object_, object_types):
     '''
     if not isinstance(object_types, tuple):
         object_types = (object_types,)
-    exact_type_match = any([type(object_) == t for t in object_types])
+    exact_type_match = any(type(object_) == t for t in object_types)
     if not exact_type_match:
         error_format = 'Please pass object_ of type %s as the argument, encountered type %s'
         message = error_format % (object_types, type(object_))

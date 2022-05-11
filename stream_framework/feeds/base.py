@@ -121,7 +121,7 @@ class BaseFeed(object):
 
         # ability to filter and change ordering (not supported for all
         # backends)
-        self._filter_kwargs = dict()
+        self._filter_kwargs = {}
         self._ordering_args = tuple()
 
     @classmethod
@@ -129,10 +129,10 @@ class BaseFeed(object):
         '''
         Returns the options for the timeline storage
         '''
-        options = {}
-        options['serializer_class'] = cls.timeline_serializer
-        options['activity_class'] = cls.activity_class
-        return options
+        return {
+            'serializer_class': cls.timeline_serializer,
+            'activity_class': cls.activity_class,
+        }
 
     @classmethod
     def get_timeline_storage(cls):
@@ -140,20 +140,20 @@ class BaseFeed(object):
         Returns an instance of the timeline storage
         '''
         options = cls.get_timeline_storage_options()
-        timeline_storage = cls.timeline_storage_class(**options)
-        return timeline_storage
+        return cls.timeline_storage_class(**options)
 
     @classmethod
     def get_activity_storage(cls):
         '''
         Returns an instance of the activity storage
         '''
-        options = {}
-        options['serializer_class'] = cls.activity_serializer
-        options['activity_class'] = cls.activity_class
         if cls.activity_storage_class is not None:
-            activity_storage = cls.activity_storage_class(**options)
-            return activity_storage
+            options = {
+                'serializer_class': cls.activity_serializer,
+                'activity_class': cls.activity_class,
+            }
+
+            return cls.activity_storage_class(**options)
 
     @classmethod
     def insert_activities(cls, activities, **kwargs):
@@ -162,8 +162,7 @@ class BaseFeed(object):
 
         :param activity: the activity class
         '''
-        activity_storage = cls.get_activity_storage()
-        if activity_storage:
+        if activity_storage := cls.get_activity_storage():
             activity_storage.add_many(activities)
 
     @classmethod
@@ -283,10 +282,7 @@ class BaseFeed(object):
         if isinstance(k, slice):
             start = k.start
 
-            if k.stop is not None:
-                bound = int(k.stop)
-            else:
-                bound = None
+            bound = int(k.stop) if k.stop is not None else None
         else:
             start = k
             bound = k + 1
@@ -329,10 +325,10 @@ class BaseFeed(object):
         '''
         checks if the activities are dehydrated
         '''
-        for activity in activities:
-            if hasattr(activity, 'dehydrated') and activity.dehydrated:
-                return True
-        return False
+        return any(
+            hasattr(activity, 'dehydrated') and activity.dehydrated
+            for activity in activities
+        )
 
     def get_activity_slice(self, start=None, stop=None, rehydrate=True):
         '''

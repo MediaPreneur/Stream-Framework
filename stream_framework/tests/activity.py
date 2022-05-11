@@ -103,8 +103,7 @@ class TestAggregatedActivity(unittest.TestCase):
 
     def generate_aggregated_activities(self, activities):
         aggregator = RecentVerbAggregator()
-        aggregated_activities = aggregator.aggregate(activities)
-        return aggregated_activities
+        return aggregator.aggregate(activities)
 
     def test_aggregated_compare(self):
         activities = self.generate_activities()

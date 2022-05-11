@@ -225,8 +225,7 @@ class Manager(object):
         :param feed: the feed to copy to
         :param source_feed: the feed with a list of activities to remove
         '''
-        activities = source_feed[:]  # need to slice
-        if activities:
+        if activities := source_feed[:]:
             return feed.remove_many(activities)
 
     def follow_user(self, user_id, target_user_id, async=True):

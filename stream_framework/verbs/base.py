@@ -14,8 +14,7 @@ class Verb(object):
         return self.infinitive
 
     def serialize(self):
-        serialized = self.id
-        return serialized
+        return self.id
 
 
 class Follow(Verb):

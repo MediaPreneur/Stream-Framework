@@ -11,10 +11,10 @@ def publish(test='yes'):
         validate()
 
     from stream_framework import __version__
-    tag_name = 'v%s' % __version__
+    tag_name = f'v{__version__}'
     local('python setup.py sdist upload')
 
-    local('git tag %s' % tag_name)
+    local(f'git tag {tag_name}')
     local('git push origin --tags')
 
 

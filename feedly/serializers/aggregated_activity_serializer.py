@@ -61,7 +61,7 @@ class AggregatedActivitySerializer(BaseAggregatedSerializer):
 
         # stick everything together
         serialized_aggregated = ';;'.join(map(str, parts))
-        serialized = '%s%s' % (self.identifier, serialized_aggregated)
+        serialized = f'{self.identifier}{serialized_aggregated}'
         return serialized
 
     def loads(self, serialized_aggregated):

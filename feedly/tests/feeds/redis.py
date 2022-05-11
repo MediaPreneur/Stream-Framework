@@ -20,9 +20,7 @@ class CustomActivity(Activity):
         # shorter than the default version
         serialization_id_str = '%s%0.2d%0.2d' % (
             milliseconds, self.object_id % 100, self.verb.id)
-        serialization_id = int(serialization_id_str)
-
-        return serialization_id
+        return int(serialization_id_str)
 
 
 class RedisCustom(RedisFeed):

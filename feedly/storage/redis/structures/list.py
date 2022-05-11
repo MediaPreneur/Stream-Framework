@@ -30,10 +30,7 @@ class BaseRedisListCache(RedisCache):
         if isinstance(k, slice):
             start = k.start
 
-            if k.stop is not None:
-                bound = int(k.stop)
-            else:
-                bound = None
+            bound = int(k.stop) if k.stop is not None else None
         else:
             start = k
             bound = k + 1
@@ -64,14 +61,12 @@ class RedisListCache(BaseRedisListCache):
         if stop is None:
             stop = -1
         key = self.get_key()
-        results = self.redis.lrange(key, start, stop)
-        return results
+        return self.redis.lrange(key, start, stop)
 
     def append(self, value):
         values = [value]
         results = self.append_many(values)
-        result = results[0]
-        return result
+        return results[0]
 
     def append_many(self, values):
         key = self.get_key()
@@ -92,8 +87,7 @@ class RedisListCache(BaseRedisListCache):
     def remove(self, value):
         values = [value]
         results = self.remove_many(values)
-        result = results[0]
-        return result
+        return results[0]
 
     def remove_many(self, values):
         key = self.get_key()
@@ -113,8 +107,7 @@ class RedisListCache(BaseRedisListCache):
 
     def count(self):
         key = self.get_key()
-        count = self.redis.llen(key)
-        return count
+        return self.redis.llen(key)
 
     def trim(self):
         '''
@@ -148,8 +141,10 @@ class FallbackRedisListCache(RedisListCache):
             redis_results = self.get_redis_results(start, stop - 1)
             required_items = stop - start
             enough_results = len(redis_results) == required_items
-            assert len(redis_results) <= required_items, 'we should never have more than we ask for, start %s, stop %s' % (
-                start, stop)
+            assert (
+                len(redis_results) <= required_items
+            ), f'we should never have more than we ask for, start {start}, stop {stop}'
+
         else:
             # [start:] slicing does not know what's enough so
             # does not hit the db unless the cache is empty
@@ -172,12 +167,12 @@ class FallbackRedisListCache(RedisListCache):
                 self.overwrite(db_results)
             results = db_results
             logger.info(
-                'retrieved %s to %s from db and not from cache with key %s' %
-                (start, stop, self.get_key()))
+                f'retrieved {start} to {stop} from db and not from cache with key {self.get_key()}'
+            )
+
         else:
             results = redis_results
-            logger.info('retrieved %s to %s from cache on key %s' %
-                        (start, stop, self.get_key()))
+            logger.info(f'retrieved {start} to {stop} from cache on key {self.get_key()}')
         return results
 
     def get_redis_results(self, start, stop):
@@ -187,8 +182,7 @@ class FallbackRedisListCache(RedisListCache):
         :param start: the beginning
         :param stop: the end
         '''
-        results = RedisListCache.get_results(self, start, stop)
-        return results
+        return RedisListCache.get_results(self, start, stop)
 
     def cache(self, fallback_results):
         '''

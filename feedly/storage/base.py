@@ -60,10 +60,10 @@ class BaseStorage(object):
         '''
         Utility function for lower levels to chose either serialize
         '''
-        ids = []
-        for activity_or_id in activities_or_ids:
-            ids.append(self.activity_to_id(activity_or_id))
-        return ids
+        return [
+            self.activity_to_id(activity_or_id)
+            for activity_or_id in activities_or_ids
+        ]
 
     def activity_to_id(self, activity):
         return getattr(activity, 'serialization_id', activity)
@@ -81,9 +81,7 @@ class BaseStorage(object):
         if getattr(self, 'aggregated_activity_class', None) is not None:
             kwargs[
                 'aggregated_activity_class'] = self.aggregated_activity_class
-        serializer_instance = serializer_class(
-            activity_class=self.activity_class, **kwargs)
-        return serializer_instance
+        return serializer_class(activity_class=self.activity_class, **kwargs)
 
     def serialize_activity(self, activity):
         '''
@@ -91,8 +89,7 @@ class BaseStorage(object):
 
         :returns str: the serialized activity
         '''
-        serialized_activity = self.serializer.dumps(activity)
-        return serialized_activity
+        return self.serializer.dumps(activity)
 
     def serialize_activities(self, activities):
         '''
@@ -183,10 +180,7 @@ class BaseActivityStorage(BaseStorage):
 
     def get(self, activity_id, *args, **kwargs):
         results = self.get_many([activity_id], *args, **kwargs)
-        if not results:
-            return None
-        else:
-            return results[0]
+        return results[0] if results else None
 
     def add(self, activity, *args, **kwargs):
         return self.add_many([activity], *args, **kwargs)

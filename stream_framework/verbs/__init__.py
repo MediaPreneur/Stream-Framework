@@ -1,7 +1,7 @@
 from stream_framework.utils import get_class_from_string
 
 
-VERB_DICT = dict()
+VERB_DICT = {}
 
 
 def get_verb_storage():
@@ -18,7 +18,7 @@ def register(verb):
     '''
     from stream_framework.verbs.base import Verb
     if not issubclass(verb, Verb):
-        raise ValueError('%s doesnt subclass Verb' % verb)
+        raise ValueError(f'{verb} doesnt subclass Verb')
     registered_verb = get_verb_storage().get(verb.id, verb)
     if registered_verb != verb:
         raise ValueError(

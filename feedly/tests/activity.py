@@ -100,8 +100,7 @@ class TestAggregatedActivity(unittest.TestCase):
         for x in range(1, 20 + diff):
             activity = Activity(x, LoveVerb, Pin(id=x))
             activities.append(activity)
-        aggregated_activities = aggregator.aggregate(activities)
-        return aggregated_activities
+        return aggregator.aggregate(activities)
 
     def test_aggregated_compare(self):
         aggregated_activities = self.generate_aggregated_activities()

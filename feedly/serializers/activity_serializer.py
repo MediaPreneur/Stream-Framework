@@ -26,13 +26,12 @@ class ActivitySerializer(BaseSerializer):
         activity_time = datetime_to_epoch(activity.time)
         parts = [activity.actor_id, activity.verb.id,
                  activity.object_id, activity.target_id or 0]
-        extra_context = activity.extra_context.copy()
-        pickle_string = ''
-        if extra_context:
+        if extra_context := activity.extra_context.copy():
             pickle_string = pickle.dumps(activity.extra_context)
+        else:
+            pickle_string = ''
         parts += [activity_time, pickle_string]
-        serialized_activity = ','.join(map(str, parts))
-        return serialized_activity
+        return ','.join(map(str, parts))
 
     def loads(self, serialized_activity):
         parts = serialized_activity.split(',')
@@ -44,10 +43,12 @@ class ActivitySerializer(BaseSerializer):
         if not target_id:
             target_id = None
         verb = get_verb_by_id(verb_id)
-        extra_context = {}
-        if pickle_string:
-            extra_context = pickle.loads(pickle_string)
-        activity = self.activity_class(actor_id, verb, object_id, target_id,
-                                       time=activity_datetime, extra_context=extra_context)
-
-        return activity
+        extra_context = pickle.loads(pickle_string) if pickle_string else {}
+        return self.activity_class(
+            actor_id,
+            verb,
+            object_id,
+            target_id,
+            time=activity_datetime,
+            extra_context=extra_context,
+        )

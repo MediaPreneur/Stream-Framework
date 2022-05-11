@@ -142,7 +142,7 @@ class TestBaseFeed(unittest.TestCase):
     @implementation
     def test_check_violation_unsliced_iter_feed(self):
         with self.assertRaises(TypeError):
-            [i for i in self.test_feed]
+            list(self.test_feed)
 
     @implementation
     def test_delete(self):
@@ -246,13 +246,21 @@ class TestBaseFeed(unittest.TestCase):
 
     def setup_filter(self):
         if not self.test_feed.filtering_supported:
-            self.skipTest('%s does not support filtering' %
-                          self.test_feed.__class__.__name__)
-        activities = []
-        for i in range(10):
-            activities.append(self.activity_class(
-                i, LoveVerb, i, i, time=datetime.datetime.now() - datetime.timedelta(seconds=i))
+            self.skipTest(
+                f'{self.test_feed.__class__.__name__} does not support filtering'
             )
+
+        activities = [
+            self.activity_class(
+                i,
+                LoveVerb,
+                i,
+                i,
+                time=datetime.datetime.now() - datetime.timedelta(seconds=i),
+            )
+            for i in range(10)
+        ]
+
         self.test_feed.insert_activities(activities)
         self.test_feed.add_many(activities)
         assert len(self.test_feed[:]) == 10
@@ -304,13 +312,18 @@ class TestBaseFeed(unittest.TestCase):
 
     def setup_ordering(self):
         if not self.test_feed.ordering_supported:
-            self.skipTest('%s does not support ordering' %
-                          self.test_feed.__class__.__name__)
-        activities = []
-        for i in range(10):
-            activities.append(self.activity_class(
-                i, LoveVerb, i, i, time=datetime.datetime.now() - datetime.timedelta(seconds=i))
+            self.skipTest(f'{self.test_feed.__class__.__name__} does not support ordering')
+        activities = [
+            self.activity_class(
+                i,
+                LoveVerb,
+                i,
+                i,
+                time=datetime.datetime.now() - datetime.timedelta(seconds=i),
             )
+            for i in range(10)
+        ]
+
         self.test_feed.insert_activities(activities)
         self.test_feed.add_many(activities)
         assert len(self.test_feed[:]) == 10

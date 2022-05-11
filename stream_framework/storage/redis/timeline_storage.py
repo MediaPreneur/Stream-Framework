@@ -10,13 +10,11 @@ class TimelineCache(RedisSortedSetCache):
 class RedisTimelineStorage(BaseTimelineStorage):
 
     def get_cache(self, key):
-        cache = TimelineCache(key)
-        return cache
+        return TimelineCache(key)
 
     def contains(self, key, activity_id):
         cache = self.get_cache(key)
-        contains = cache.contains(activity_id)
-        return contains
+        return cache.contains(activity_id)
 
     def get_slice_from_storage(self, key, start, stop, filter_kwargs=None, ordering_args=None):
         '''
@@ -45,28 +43,28 @@ class RedisTimelineStorage(BaseTimelineStorage):
             if v is not None:
                 if not isinstance(v, (float, int, long)):
                     raise ValueError(
-                        'Filter kwarg values should be floats, int or long, got %s=%s' % (k, v))
+                        f'Filter kwarg values should be floats, int or long, got {k}={v}'
+                    )
+
 
                 # By default, the interval specified by min_score and max_score is closed (inclusive).
                 # It is possible to specify an open interval (exclusive) by prefixing the score with the character (
                 _, direction = k.split('__')
                 equal = 'te' in direction
 
+                if not equal:
+                    v = f'({str(v)}'
                 if 'gt' in direction:
-                    if not equal:
-                        v = '(' + str(v)
                     result_kwargs['min_score'] = v
                 else:
-                    if not equal:
-                        v = '(' + str(v)
                     result_kwargs['max_score'] = v
         # complain if we didn't recognize the filter kwargs
         if filter_kwargs:
-            raise ValueError('Unrecognized filter kwargs %s' % filter_kwargs)
+            raise ValueError(f'Unrecognized filter kwargs {filter_kwargs}')
 
         if ordering_args:
             if len(ordering_args) > 1:
-                raise ValueError('Too many order kwargs %s' % ordering_args)
+                raise ValueError(f'Too many order kwargs {ordering_args}')
 
             if '-activity_id' in ordering_args:
                 # descending sort
@@ -74,21 +72,18 @@ class RedisTimelineStorage(BaseTimelineStorage):
             elif 'activity_id' in ordering_args:
                 cache.sort_asc = True
             else:
-                raise ValueError('Unrecognized order kwargs %s' % ordering_args)
+                raise ValueError(f'Unrecognized order kwargs {ordering_args}')
 
         # get the actual results
         key_score_pairs = cache.get_results(start, stop, **result_kwargs)
-        score_key_pairs = [(score, data) for data, score in key_score_pairs]
-
-        return score_key_pairs
+        return [(score, data) for data, score in key_score_pairs]
 
     def get_batch_interface(self):
         return get_redis_connection().pipeline(transaction=False)
 
     def get_index_of(self, key, activity_id):
         cache = self.get_cache(key)
-        index = cache.index_of(activity_id)
-        return index
+        return cache.index_of(activity_id)
 
     def add_to_storage(self, key, activities, batch_interface=None):
         cache = self.get_cache(key)
@@ -100,13 +95,12 @@ class RedisTimelineStorage(BaseTimelineStorage):
             # errors in strings?
             # anyhow raise them here :)
             if hasattr(r, 'isdigit') and not r.isdigit():
-                raise ValueError('got error %s in results %s' % (r, result))
+                raise ValueError(f'got error {r} in results {result}')
         return result
 
     def remove_from_storage(self, key, activities, batch_interface=None):
         cache = self.get_cache(key)
-        results = cache.remove_many(activities.values())
-        return results
+        return cache.remove_many(activities.values())
 
     def count(self, key):
         cache = self.get_cache(key)

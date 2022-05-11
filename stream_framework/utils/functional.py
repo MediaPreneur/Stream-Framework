@@ -315,10 +315,7 @@ class SimpleLazyObject(LazyObject):
     # Return a meaningful representation of the lazy object for debugging
     # without evaluating the wrapped object.
     def __repr__(self):
-        if self._wrapped is empty:
-            repr_attr = self._setupfunc
-        else:
-            repr_attr = self._wrapped
+        repr_attr = self._setupfunc if self._wrapped is empty else self._wrapped
         return '<%s: %r>' % (type(self).__name__, repr_attr)
 
     def __deepcopy__(self, memo):
@@ -362,23 +359,31 @@ else:
     def total_ordering(cls):
         """Class decorator that fills in missing ordering methods"""
         convert = {
-            '__lt__': [('__gt__', lambda self, other: not (self < other or self == other)),
-                       ('__le__', lambda self, other:
-                        self < other or self == other),
-                       ('__ge__', lambda self, other: not self < other)],
-            '__le__': [('__ge__', lambda self, other: not self <= other or self == other),
-                       ('__lt__', lambda self, other:
-                        self <= other and not self == other),
-                       ('__gt__', lambda self, other: not self <= other)],
-            '__gt__': [('__lt__', lambda self, other: not (self > other or self == other)),
-                       ('__ge__', lambda self, other:
-                        self > other or self == other),
-                       ('__le__', lambda self, other: not self > other)],
-            '__ge__': [('__le__', lambda self, other: (not self >= other) or self == other),
-                       ('__gt__', lambda self, other:
-                        self >= other and not self == other),
-                       ('__lt__', lambda self, other: not self >= other)]
+            '__lt__': [
+                ('__gt__', lambda self, other: self >= other and self != other),
+                ('__le__', lambda self, other: self < other or self == other),
+                ('__ge__', lambda self, other: not self < other),
+            ],
+            '__le__': [
+                ('__ge__', lambda self, other: not self <= other or self == other),
+                ('__lt__', lambda self, other: self <= other and self != other),
+                ('__gt__', lambda self, other: not self <= other),
+            ],
+            '__gt__': [
+                ('__lt__', lambda self, other: self <= other and self != other),
+                ('__ge__', lambda self, other: self > other or self == other),
+                ('__le__', lambda self, other: not self > other),
+            ],
+            '__ge__': [
+                (
+                    '__le__',
+                    lambda self, other: (not self >= other) or self == other,
+                ),
+                ('__gt__', lambda self, other: self >= other and self != other),
+                ('__lt__', lambda self, other: not self >= other),
+            ],
         }
+
         roots = set(dir(cls)) & set(convert)
         if not roots:
             raise ValueError(

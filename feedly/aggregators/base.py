@@ -48,8 +48,7 @@ class BaseAggregator(object):
         '''
         aggregate_dict = self.group_activities(activities)
         aggregated_activities = aggregate_dict.values()
-        ranked_aggregates = self.rank(aggregated_activities)
-        return ranked_aggregates
+        return self.rank(aggregated_activities)
 
     def merge(self, aggregated, activities):
         '''
@@ -99,7 +98,7 @@ class BaseAggregator(object):
         Groups the activities based on their group
         Found by running get_group(actvity on them)
         '''
-        aggregate_dict = dict()
+        aggregate_dict = {}
         # make sure that if we aggregated multiple activities
         # they end up in serialization_id desc in the aggregated activity
         activities = list(activities)
@@ -144,5 +143,4 @@ class RecentVerbAggregator(BaseAggregator):
         '''
         verb = activity.verb.id
         date = activity.time.date()
-        group = '%s-%s' % (verb, date)
-        return group
+        return f'{verb}-{date}'

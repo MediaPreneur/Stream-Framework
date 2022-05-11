@@ -15,11 +15,10 @@ class BaseSerializer(object):
 
     def check_type(self, data):
         if not isinstance(data, Activity):
-            raise ValueError('we only know how to dump activities, not %s' % type(data))
+            raise ValueError(f'we only know how to dump activities, not {type(data)}')
 
     def loads(self, serialized_activity):
-        activity = serialized_activity
-        return activity
+        return serialized_activity
 
     def dumps(self, activity):
         self.check_type(activity)
